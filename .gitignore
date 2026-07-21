@@ -1,0 +1,14 @@
+# ===== Dữ liệu nhạy cảm — KHÔNG đưa lên Git =====
+# File sao lưu do phần mềm xuất ra có thể chứa thông tin bệnh nhân
+sao-luu-benh-nhan-*.json
+*.backup.json
+
+# ===== Hệ điều hành =====
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ===== Trình soạn thảo / IDE =====
+.vscode/
+.idea/
+*.swp

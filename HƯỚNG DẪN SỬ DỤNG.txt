@@ -1,0 +1,129 @@
+========================================================
+  PHẦN MỀM QUẢN LÝ BỆNH NHÂN TAI MŨI HỌNG
+  Hướng dẫn sử dụng
+========================================================
+
+1. MỞ PHẦN MỀM
+--------------------------------------------------------
+- Nhấp đúp (double-click) vào file "index.html".
+- Phần mềm sẽ mở trong trình duyệt.
+- KHUYẾN NGHỊ: dùng Google Chrome hoặc Microsoft Edge.
+- KHÔNG dùng chế độ Ẩn danh / Incognito (dữ liệu sẽ mất khi đóng).
+
+Mẹo: Để mở nhanh lần sau, sau khi mở bằng Chrome hãy bấm
+biểu tượng ngôi sao trên thanh địa chỉ để lưu (bookmark),
+hoặc kéo file index.html ra màn hình Desktop tạo lối tắt.
+
+
+2. CÁC CHỨC NĂNG CHÍNH
+--------------------------------------------------------
+• TRANG CHỦ:
+  - Xem nhanh số bệnh nhân, số lượt khám/phẫu thuật trong tháng.
+  - NHẮC LỊCH TÁI KHÁM: danh sách bệnh nhân quá hạn / sắp đến
+    hạn tái khám. Bấm vào một dòng để mở hồ sơ bệnh nhân.
+
+• BỆNH NHÂN:
+  - Thêm bệnh nhân mới (tự động sinh mã BN0001, BN0002...).
+  - Tìm kiếm theo tên, mã, số điện thoại (gõ có dấu hay không dấu đều được).
+  - Bấm vào bệnh nhân để xem hồ sơ đầy đủ + lịch sử khám/mổ.
+
+• KHÁM BỆNH:
+  - Ghi nhận từng lần khám: lý do, triệu chứng, chẩn đoán,
+    hướng điều trị, đơn thuốc, chi phí, hẹn tái khám.
+  - Đính kèm ẢNH NỘI SOI và ẢNH ĐƠN THUỐC (chọn nhiều ảnh cùng lúc).
+  - Có thể thêm lần khám từ menu "Khám bệnh" hoặc trong hồ sơ bệnh nhân.
+
+• PHẪU THUẬT:
+  - Ghi nhận ca mổ: loại phẫu thuật, phương pháp vô cảm,
+    tường trình, kết quả, biến chứng, chi phí, thanh toán.
+  - Đính kèm ẢNH TRƯỚC/SAU MỔ.
+  - Nút gợi ý nhanh lịch tái khám (sau 1 tuần, 1 tháng...).
+
+• BÁO CÁO:
+  - Chọn khoảng thời gian (hoặc bấm nhanh: Tháng/Quý/Năm).
+  - Thống kê số lượt khám, phẫu thuật, bệnh nhân mới, doanh thu.
+  - Biểu đồ theo tháng, theo chẩn đoán, theo loại phẫu thuật.
+  - Nút "In" để in hoặc lưu PDF báo cáo.
+
+• CÀI ĐẶT:
+  - Sửa thông tin in trên đơn thuốc: tên bệnh viện, khoa,
+    tên bác sĩ (ký tên), số điện thoại, lời dặn mặc định.
+  - Nút "Xem thử mẫu đơn" để xem trước đơn thuốc sẽ in ra sao.
+
+• SAO LƯU:
+  - Xuất toàn bộ dữ liệu (kèm ảnh) ra 1 file để lưu trữ.
+  - Phục hồi lại dữ liệu từ file khi cần (đổi máy, sự cố...).
+
+
+3. THÊM ẢNH (NỘI SOI / ĐƠN THUỐC)
+--------------------------------------------------------
+- Trong form Khám bệnh hoặc Phẫu thuật, kéo xuống phần ảnh.
+- Chọn "Loại ảnh sắp thêm" (Nội soi / Đơn thuốc / Trước mổ / Sau mổ).
+- Bấm vào ô "📷 Bấm để chọn ảnh" rồi chọn 1 hoặc nhiều ảnh.
+- Có thể ghi chú cho từng ảnh.
+- Bấm vào ảnh để xem phóng to.
+
+
+4. KÊ ĐƠN THUỐC & IN CHO BỆNH NHÂN
+--------------------------------------------------------
+- Trong form Khám bệnh, phần "Thuốc điều trị": bấm
+  "➕ Thêm thuốc" để thêm từng dòng thuốc gồm:
+  Tên thuốc + hàm lượng · Số lượng · Đơn vị · Cách dùng.
+- Điền ô "Lời dặn" (có sẵn lời dặn mặc định, sửa được).
+- Bấm "💊 Lưu & In đơn" → phần mềm tự lưu và hiện ngay
+  bản đơn thuốc đúng mẫu (đã điền sẵn họ tên, tuổi, giới,
+  địa chỉ, chẩn đoán, ngày kê đơn).
+- Bấm "🖨️ In đơn thuốc" → hộp thoại in hiện ra.
+- Có thể in lại đơn bất cứ lúc nào: vào hồ sơ bệnh nhân,
+  ở mỗi lần khám bấm nút "🖨️ Đơn".
+
+  *** CÀI ĐẶT HỘP THOẠI IN (làm 1 lần, trình duyệt sẽ nhớ) ***
+  Trong hộp thoại in của Chrome/Edge:
+  1) Khổ giấy (Paper size): chọn A5
+  2) Lề (Margins): Mặc định
+  3) Bấm "Tùy chọn khác / More settings" → BỎ TICK ô
+     "Đầu trang và chân trang / Headers and footers"
+     (để bỏ dòng ngày giờ, tiêu đề và đường dẫn file
+      thừa ở đầu/cuối trang).
+  4) Muốn lưu file: ở mục "Máy in" chọn "Lưu dưới dạng PDF".
+
+Lưu ý: Lần đầu vào mục "Cài đặt" để kiểm tra tên bệnh viện,
+tên bác sĩ, số điện thoại in trên đơn cho đúng.
+
+
+5. SAO LƯU DỮ LIỆU — RẤT QUAN TRỌNG
+--------------------------------------------------------
+Dữ liệu được lưu NGAY TRÊN MÁY NÀY (trong trình duyệt),
+KHÔNG gửi lên internet — nên rất riêng tư và bảo mật.
+
+Tuy nhiên, để tránh mất dữ liệu, hãy:
+  ✓ Vào mục "Sao lưu" → "Tải file sao lưu" ĐỊNH KỲ
+    (ví dụ mỗi tuần một lần).
+  ✓ Lưu file sao lưu ở nơi an toàn (USB, ổ đĩa khác, Google Drive...).
+
+Dữ liệu CÓ THỂ BỊ MẤT nếu:
+  ✗ Xóa lịch sử / dữ liệu duyệt web của trình duyệt.
+  ✗ Gỡ cài đặt trình duyệt.
+  ✗ Dùng chế độ Ẩn danh.
+=> Vì vậy hãy sao lưu thường xuyên!
+
+
+6. CHUYỂN SANG MÁY KHÁC
+--------------------------------------------------------
+1) Ở máy cũ: mục "Sao lưu" → tải file sao lưu.
+2) Chép cả thư mục phần mềm + file sao lưu sang máy mới.
+3) Ở máy mới: mở index.html → mục "Sao lưu" → chọn
+   "Thay thế toàn bộ" → chọn file sao lưu để phục hồi.
+
+
+7. NÂNG CẤP SAU NÀY
+--------------------------------------------------------
+Khi bác sĩ dùng ổn định và muốn:
+  - Truy cập từ nhiều máy / điện thoại
+  - Tự động sao lưu lên cloud
+  - Nhắc lịch qua SMS/Zalo cho bệnh nhân
+  - Nhiều người dùng (lễ tân, y tá...)
+=> có thể nâng cấp lên phiên bản chạy trên máy chủ (cloud).
+   Dữ liệu đang có sẽ được chuyển sang không bị mất.
+
+========================================================
