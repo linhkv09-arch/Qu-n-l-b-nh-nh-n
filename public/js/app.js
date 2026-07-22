@@ -14,12 +14,14 @@ const App = (function () {
   };
 
   let current = null;
+  let currentParams = {};
   const root = () => document.getElementById("viewRoot");
 
   // params: dữ liệu chuyển giữa các view (vd: mở chi tiết bệnh nhân)
   async function go(viewName, params) {
     if (!views[viewName]) viewName = "dashboard";
     current = viewName;
+    currentParams = params || {};
     U.revokeAllUrls(); // giải phóng URL ảnh của view trước
 
     // cập nhật nav active
@@ -71,23 +73,45 @@ const App = (function () {
     }
   }
 
+  // Tải lại view đang mở (dùng cho cập nhật realtime từ thiết bị khác)
+  function refreshCurrent() {
+    if (!current) return;
+    // Không làm gián đoạn khi bác sĩ đang mở form/hộp thoại
+    if (document.querySelector(".modal-overlay")) return;
+    go(current, currentParams);
+  }
+
+  function closeSidebar() {
+    document.getElementById("app").classList.remove("sidebar-open");
+  }
+
+  let navBound = false;
   function init() {
-    document.querySelectorAll(".nav-item").forEach((btn) => {
-      btn.addEventListener("click", () => go(btn.dataset.view));
-    });
+    if (!navBound) {
+      document.querySelectorAll(".nav-item").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          go(btn.dataset.view);
+          closeSidebar(); // đóng menu sau khi chọn (điện thoại)
+        });
+      });
+      // Nút menu cho điện thoại
+      const menuBtn = document.getElementById("menuToggle");
+      const backdrop = document.getElementById("sidebarBackdrop");
+      if (menuBtn)
+        menuBtn.addEventListener("click", () =>
+          document.getElementById("app").classList.toggle("sidebar-open")
+        );
+      if (backdrop) backdrop.addEventListener("click", closeSidebar);
+      navBound = true;
+    }
     go("dashboard");
   }
 
-  return { go, setTopbar, init, updateStorageInfo };
+  return { go, setTopbar, init, updateStorageInfo, refreshCurrent };
 })();
 
-document.addEventListener("DOMContentLoaded", () => {
-  DB.open()
-    .then(() => App.init())
-    .catch((err) => {
-      document.getElementById("viewRoot").innerHTML =
-        `<div class="empty"><div class="empty-ico">⚠️</div><h3>Không mở được cơ sở dữ liệu</h3>
-         <p class="muted">Trình duyệt có thể đang chặn lưu trữ. Hãy mở bằng Chrome hoặc Edge và không dùng chế độ ẩn danh.</p>
-         <p class="muted">${U.esc(err.message || String(err))}</p></div>`;
-    });
-});
+// Cầu nối cho src/main.js (ES module) gọi sau khi đăng nhập
+window.App = App;
+window.startApp = function () {
+  App.init();
+};

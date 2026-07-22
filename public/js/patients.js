@@ -3,13 +3,7 @@
  * ============================================================ */
 
 const Patients = (function () {
-  // ---- Sinh mã bệnh nhân tự động: BN0001, BN0002... ----
-  async function nextCode() {
-    let counter = await DB.getMeta("patientCounter", 0);
-    counter = (counter || 0) + 1;
-    await DB.setMeta("patientCounter", counter);
-    return "BN" + String(counter).padStart(4, "0");
-  }
+  // Mã bệnh nhân (BN0001...) do Postgres tự sinh khi thêm mới (xem schema.sql)
 
   async function get(id) {
     return DB.get("patients", id);
@@ -95,7 +89,7 @@ const Patients = (function () {
       }
       const rec = existing
         ? Object.assign({}, existing)
-        : { id: U.uid(), createdAt: Date.now(), code: await nextCode() };
+        : { id: U.uid(), createdAt: Date.now() }; // mã BN do Postgres tự sinh
       rec.name = name;
       rec.gender = fd.get("gender") || "";
       rec.birthYear = fd.get("birthYear") ? parseInt(fd.get("birthYear"), 10) : null;
@@ -103,10 +97,13 @@ const Patients = (function () {
       rec.job = (fd.get("job") || "").trim();
       rec.address = (fd.get("address") || "").trim();
       rec.note = (fd.get("note") || "").trim();
-      await save(rec);
+      const saved = await save(rec); // trả về bản ghi kèm mã BN mới
       modal.close();
-      U.toast(existing ? "Đã lưu thay đổi" : "Đã thêm bệnh nhân " + rec.code, "ok");
-      if (onSaved) onSaved(rec);
+      U.toast(
+        existing ? "Đã lưu thay đổi" : "Đã thêm bệnh nhân " + ((saved && saved.code) || ""),
+        "ok"
+      );
+      if (onSaved) onSaved(saved || rec);
     });
   }
 
@@ -374,5 +371,5 @@ const Patients = (function () {
     root.appendChild(tlWrap);
   }
 
-  return { render, openForm, get, save, remove, nextCode };
+  return { render, openForm, get, save, remove };
 })();

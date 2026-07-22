@@ -1,0 +1,148 @@
+========================================================
+  TRIỂN KHAI PHẦN MỀM LÊN INTERNET (Supabase + Vercel)
+  Làm theo đúng thứ tự. Không cần cài gì trên máy.
+========================================================
+
+Tổng quan 3 phần:
+  A. Supabase  = nơi lưu dữ liệu (cơ sở dữ liệu + ảnh + đăng nhập)
+  B. Vercel    = nơi chạy giao diện web (cho ra 1 đường link)
+  C. Test      = kiểm tra đăng nhập + đồng bộ 2 thiết bị
+
+
+========================================================
+PHẦN A — TẠO DỰ ÁN SUPABASE
+========================================================
+
+A1. Vào https://supabase.com → "Start your project" → đăng nhập
+    (nên đăng nhập bằng chính tài khoản GitHub cho tiện).
+
+A2. Bấm "New project":
+    - Organization: chọn/tạo (tên gì cũng được)
+    - Name: vd "quan-ly-benh-nhan"
+    - Database Password: đặt 1 mật khẩu MẠNH và LƯU LẠI
+      (dùng khi cần, không phải mật khẩu đăng nhập app)
+    - Region: chọn "Southeast Asia (Singapore)" cho gần Việt Nam
+    - Bấm "Create new project", đợi ~1-2 phút.
+
+A3. TẠO BẢNG DỮ LIỆU:
+    - Menu trái → "SQL Editor" → "New query"
+    - Mở file  supabase/schema.sql  trong dự án, COPY TOÀN BỘ
+    - Dán vào ô SQL rồi bấm "Run" (góc dưới phải).
+    - Thấy "Success" là xong. (Chạy lại nhiều lần vẫn an toàn.)
+
+A4. TẠO TÀI KHOẢN ĐĂNG NHẬP cho bác sĩ / nhân viên:
+    - Menu trái → "Authentication" → "Users" → "Add user"
+      → "Create new user"
+    - Nhập Email + Password cho từng người → "Create user"
+    - Muốn nhiều người: lặp lại bước này.
+    - (Các tài khoản này dùng để ĐĂNG NHẬP VÀO APP.)
+
+A5. TẮT ĐĂNG KÝ CÔNG KHAI (quan trọng, để người lạ không tự tạo tài khoản):
+    - "Authentication" → "Sign In / Providers" (hoặc "Providers")
+      → mục "Email"
+    - TẮT tùy chọn "Allow new users to sign up" → Save.
+    (Từ nay chỉ tài khoản do bác sĩ tạo ở A4 mới đăng nhập được.)
+
+A6. LẤY URL + KHÓA (dùng cho Vercel ở Phần B):
+    - Menu trái → "Project Settings" → "API"
+    - Ghi lại 2 giá trị:
+        • Project URL            → dạng https://xxxxx.supabase.co
+        • Project API keys > anon public   → chuỗi dài "eyJ..."
+    (KHÔNG dùng khóa "service_role" cho web.)
+
+
+========================================================
+PHẦN B — DEPLOY LÊN VERCEL
+========================================================
+
+Điều kiện: code đã nằm trên GitHub (repo:
+  https://github.com/linhkv09-arch/Qu-n-l-b-nh-nh-n ).
+Nếu chưa đẩy bản Supabase mới lên GitHub, xem PHẦN D bên dưới trước.
+
+B1. Vào https://vercel.com → "Sign Up"/đăng nhập
+    → chọn "Continue with GitHub".
+
+B2. "Add New..." → "Project" → tìm repo "Qu-n-l-b-nh-nh-n"
+    → bấm "Import".
+
+B3. Ở màn hình cấu hình:
+    - Framework Preset: Vercel tự nhận "Vite" (nếu không, chọn Vite).
+    - Build Command / Output: để mặc định (đã có sẵn trong vercel.json).
+    - Mở mục "Environment Variables", thêm 2 biến (lấy từ A6):
+        Name:  VITE_SUPABASE_URL        Value:  https://xxxxx.supabase.co
+        Name:  VITE_SUPABASE_ANON_KEY   Value:  eyJ... (anon public)
+      (Bấm "Add" cho từng biến.)
+
+B4. Bấm "Deploy", đợi ~1 phút. Xong sẽ có đường link dạng
+    https://qu-n-l-b-nh-nh-n.vercel.app  → đây là link dùng hằng ngày.
+
+B5. (Nếu sau này sửa code) mỗi lần đẩy code mới lên GitHub,
+    Vercel TỰ ĐỘNG build lại. Nếu đổi biến môi trường thì vào
+    Vercel → Project → Settings → Environment Variables, sửa xong
+    vào tab "Deployments" → "Redeploy".
+
+
+========================================================
+PHẦN C — TEST ĐĂNG NHẬP & ĐỒNG BỘ 2 THIẾT BỊ
+========================================================
+
+C1. Mở link Vercel trên MÁY TÍNH → hiện màn hình Đăng nhập
+    → nhập email/mật khẩu đã tạo ở A4 → vào được app.
+
+C2. Thêm 1 bệnh nhân + 1 lần khám (kèm 1 ảnh) → kiểm tra lưu được.
+
+C3. Mở CÙNG link đó trên ĐIỆN THOẠI (hoặc máy khác) → đăng nhập
+    bằng cùng tài khoản (hoặc tài khoản khác đã tạo).
+    → Phải thấy đúng bệnh nhân vừa thêm ở C2.
+
+C4. TEST REALTIME: để cả 2 thiết bị cùng mở màn hình "Bệnh nhân".
+    Trên điện thoại thêm 1 bệnh nhân mới → trên máy tính danh sách
+    tự cập nhật (trong ~1 giây), không cần bấm tải lại.
+
+C5. TEST ẢNH: ảnh nội soi/đơn thuốc thêm ở thiết bị này phải xem
+    được ở thiết bị kia (ảnh lưu trên Supabase Storage).
+
+
+========================================================
+PHẦN D — ĐẨY BẢN SUPABASE MỚI LÊN GITHUB (nếu cần)
+========================================================
+
+Nếu Claude/bác sĩ chưa đẩy bản mới, mở Git Bash / PowerShell:
+
+    cd "D:\Claude Code\Quản lí bệnh nhân"
+    git add -A
+    git commit -m "Chuyển sang Supabase (cloud, đa thiết bị, đăng nhập)"
+    git push
+
+(Máy đã lưu đăng nhập GitHub nên push thẳng được.)
+
+
+========================================================
+PHẦN E — (TÙY CHỌN) CHUYỂN DỮ LIỆU CŨ SANG
+========================================================
+
+Chỉ làm nếu bản cũ (IndexedDB) đã có dữ liệu bệnh nhân thật:
+  1. Mở app CŨ (bản index.html chạy local trước đây) → "Sao lưu"
+     → tải file .json.
+  2. Cần cài Node.js (https://nodejs.org, bản LTS).
+  3. Trong thư mục dự án, đặt biến môi trường (PowerShell):
+        $env:SUPABASE_URL="https://xxxxx.supabase.co"
+        $env:SUPABASE_SERVICE_ROLE="eyJ..."   (khóa service_role, ở A6)
+  4. Chạy:
+        npm install
+        node migrate/import-backup.mjs "đường-dẫn/file-sao-luu.json"
+  5. Kiểm tra dữ liệu đã lên Supabase (Table Editor).
+
+  (Hiện dữ liệu đang trống nên thường KHÔNG cần bước này.)
+
+
+========================================================
+GHI CHÚ BẢO MẬT
+========================================================
+- Chỉ dùng khóa "anon public" cho web (Vercel). Khóa này công khai
+  được vì dữ liệu đã được bảo vệ bằng đăng nhập + RLS.
+- Khóa "service_role" chỉ dùng cho script migration trên máy tin cậy,
+  TUYỆT ĐỐI không đưa lên web/GitHub.
+- Ảnh để ở bucket công khai (đường dẫn ngẫu nhiên khó đoán). Nếu muốn
+  chặt hơn (chỉ người đăng nhập xem được ảnh), báo để chuyển sang
+  bucket riêng tư + link có hạn.

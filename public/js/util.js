@@ -224,6 +224,15 @@ const U = (function () {
     _objectUrls.length = 0;
   }
 
+  // Nguồn ảnh để hiển thị: blob (ảnh mới chọn) hoặc path trên Supabase Storage
+  function imgSrc(img) {
+    if (!img) return "";
+    if (img.blob) return blobUrl(img.blob); // ảnh mới, chưa tải lên
+    if (img.path && window.DB && DB.imageUrl) return DB.imageUrl(img.path); // ảnh trên cloud
+    if (img.url) return img.url;
+    return "";
+  }
+
   // ---- Lightbox xem ảnh phóng to ----
   function lightbox(url, caption) {
     const lb = document.createElement("div");
@@ -289,7 +298,7 @@ const U = (function () {
     function render() {
       grid.innerHTML = "";
       images.forEach((img) => {
-        const url = blobUrl(img.blob);
+        const url = imgSrc(img);
         const cell = document.createElement("div");
         cell.className = "img-thumb";
         cell.innerHTML = `
@@ -341,7 +350,7 @@ const U = (function () {
       return grid;
     }
     images.forEach((img) => {
-      const url = blobUrl(img.blob);
+      const url = imgSrc(img);
       const cell = document.createElement("div");
       cell.className = "img-thumb";
       cell.innerHTML = `

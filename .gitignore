@@ -1,3 +1,16 @@
+# ===== Node / Vite =====
+node_modules/
+dist/
+.vite/
+
+# ===== Biến môi trường (chứa khóa Supabase) — KHÔNG đưa lên Git =====
+.env
+.env.local
+.env.*.local
+
+# ===== Vercel =====
+.vercel
+
 # ===== Dữ liệu nhạy cảm — KHÔNG đưa lên Git =====
 # File sao lưu do phần mềm xuất ra có thể chứa thông tin bệnh nhân
 sao-luu-benh-nhan-*.json
