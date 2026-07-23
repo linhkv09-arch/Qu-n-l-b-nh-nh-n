@@ -208,6 +208,16 @@ const Visits = (function () {
       return rec;
     }
 
+    // Sau khi lưu kết quả khám: tự soạn tin nhắn Zalo cho bệnh nhân
+    async function moZaloSauKham(rec) {
+      try {
+        const p = lockedPatient || (await Patients.get(rec.patientId));
+        if (p) Zalo.moHopThoai({ patient: p, visit: rec, loai: Zalo.LOAI.SAU_KHAM });
+      } catch (e) {
+        console.warn("Không mở được hộp tin nhắn Zalo:", e.message);
+      }
+    }
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const rec = await persist();
@@ -215,6 +225,7 @@ const Visits = (function () {
       modal.close();
       U.toast(existing ? "Đã lưu thay đổi" : "Đã lưu lần khám", "ok");
       if (opts.onSaved) opts.onSaved(rec);
+      moZaloSauKham(rec);
     });
 
     printBtn.addEventListener("click", async () => {
@@ -240,6 +251,7 @@ const Visits = (function () {
           <strong style="margin-left:8px;">${U.fmtDate(v.date)}</strong>
         </div>
         <div class="row-actions">
+          <button class="btn btn-sm act-zalo">💬 Zalo</button>
           <button class="btn btn-sm act-print">🖨️ Đơn</button>
           <button class="btn btn-sm act-view">Xem</button>
           <button class="btn btn-sm act-edit">Sửa</button>
@@ -256,6 +268,10 @@ const Visits = (function () {
         </div>
       </div>
     `;
+    el.querySelector(".act-zalo").addEventListener("click", async () => {
+      const p = await Patients.get(v.patientId);
+      if (p) Zalo.moHopThoai({ patient: p, visit: v, loai: Zalo.LOAI.SAU_KHAM });
+    });
     el.querySelector(".act-print").addEventListener("click", () => Rx.previewFromVisit(v));
     el.querySelector(".act-view").addEventListener("click", () => detailModal(v));
     el.querySelector(".act-edit").addEventListener("click", () =>

@@ -64,6 +64,81 @@ const Dashboard = (function () {
     `;
     root.appendChild(stats);
 
+    // ============================================================
+    //  CẦN NHẮC TÁI KHÁM HÔM NAY (nhắn Zalo)
+    //  Đến hạn hôm nay hoặc đã quá hạn, CHƯA tái khám,
+    //  và CHƯA được đánh dấu "đã gửi" trong hôm nay.
+    // ============================================================
+    let sentMessages = [];
+    try {
+      sentMessages = await DB.all("sentMessages");
+    } catch (e) {
+      console.warn("Chưa đọc được lịch sử tin nhắn:", e.message);
+    }
+    const msgByPatient = {};
+    sentMessages.forEach((m) => {
+      (msgByPatient[m.benhNhanId] = msgByPatient[m.benhNhanId] || []).push(m);
+    });
+
+    const homNay = U.todayISO();
+    const moiHoSo = visits.concat(surgeries);
+    const canNhac = items.filter((i) => {
+      if (i.days > 0) return false; // chưa tới hạn
+      // đã quay lại khám sau ngày hẹn -> coi như đã tái khám
+      const daTaiKham = moiHoSo.some(
+        (r) => r.patientId === i.patient.id && r.date && r.date > i.date
+      );
+      if (daTaiKham) return false;
+      // đã nhắc trong hôm nay -> ẩn khỏi danh sách hôm nay
+      const daNhac = (msgByPatient[i.patient.id] || []).some(
+        (m) =>
+          m.loai === "nhac_tai_kham" &&
+          m.trangThai === "da_gui" &&
+          m.guiLuc &&
+          U.toISODate(new Date(Number(m.guiLuc))) === homNay
+      );
+      return !daNhac;
+    });
+
+    const zaloWrap = document.createElement("div");
+    if (canNhac.length) {
+      zaloWrap.innerHTML = `
+        <div class="section-title"><span>💬 Cần nhắc tái khám hôm nay <span class="badge badge-warn">${canNhac.length}</span></span></div>
+        <div class="card"><div class="table-wrap"><table class="data">
+          <thead><tr><th>Bệnh nhân</th><th>Điện thoại</th><th>Ngày hẹn</th><th>Tình trạng</th><th></th></tr></thead>
+          <tbody>
+          ${canNhac
+            .map((i, idx) => {
+              const tt =
+                i.days < 0
+                  ? `<span class="badge badge-danger">Quá ${Math.abs(i.days)} ngày</span>`
+                  : `<span class="badge badge-warn">Hôm nay</span>`;
+              return `<tr>
+                <td><strong>${U.esc(i.patient.name)}</strong> <span class="muted" style="font-size:12px;">${U.esc(i.patient.code || "")}</span></td>
+                <td class="nowrap">${U.esc(i.patient.phone || "—")}</td>
+                <td class="nowrap">${U.fmtDate(i.date)}</td>
+                <td class="nowrap">${tt}</td>
+                <td class="text-right"><button class="btn btn-sm btn-gold zalo-btn" data-idx="${idx}">💬 Nhắn Zalo</button></td>
+              </tr>`;
+            })
+            .join("")}
+          </tbody>
+        </table></div></div>`;
+      root.appendChild(zaloWrap);
+
+      zaloWrap.querySelectorAll(".zalo-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const i = canNhac[parseInt(btn.dataset.idx, 10)];
+          Zalo.moHopThoai({
+            patient: i.patient,
+            visit: i.source,
+            loai: Zalo.LOAI.NHAC_TAI_KHAM,
+            onSent: () => render(root), // gửi xong thì ẩn khỏi danh sách
+          });
+        });
+      });
+    }
+
     // ---- Nhắc lịch tái khám ----
     const remTitle = document.createElement("div");
     remTitle.className = "section-title";

@@ -834,6 +834,46 @@ table.data tr.clickable { cursor: pointer; }
 }
 
 /* ============================================================
+ * Hộp thoại tin nhắn Zalo
+ * ============================================================ */
+.zalo-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.zalo-name { font-size: 16px; font-weight: 700; color: var(--blue-deep); }
+.zalo-phone { font-size: 13.5px; color: var(--ink-soft); margin-top: 3px; }
+.zalo-phone code {
+  background: var(--accent-soft);
+  color: var(--blue-deep);
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 12.5px;
+}
+.zalo-warn { color: var(--warn); font-weight: 600; }
+.zalo-text {
+  width: 100%;
+  font-family: inherit;
+  font-size: 14.5px;
+  line-height: 1.6;
+  resize: vertical;
+}
+/* Danh sách từ khóa trong trang Cài đặt */
+.zalo-ph { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.zalo-ph code {
+  background: var(--accent-soft);
+  color: var(--blue-deep);
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* ============================================================
  * Màn hình đăng nhập
  * ============================================================ */
 .auth-screen {

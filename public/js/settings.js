@@ -98,6 +98,61 @@ const Settings = (function () {
       };
       Rx.preview(samplePatient, sampleVisit);
     });
+
+    // ============================================================
+    //  MẪU TIN NHẮN ZALO
+    // ============================================================
+    const mauSauKham = await Zalo.layMau(Zalo.LOAI.SAU_KHAM);
+    const mauNhac = await Zalo.layMau(Zalo.LOAI.NHAC_TAI_KHAM);
+
+    const zaloCard = document.createElement("div");
+    zaloCard.className = "card card-pad";
+    zaloCard.style.marginTop = "16px";
+    zaloCard.innerHTML = `
+      <h3 style="margin-top:0;color:var(--blue-deep);">💬 Mẫu tin nhắn Zalo</h3>
+      <p class="muted" style="font-size:14px;line-height:1.6;">
+        Nội dung sẽ được điền tự động rồi hiện ra để bác sĩ sửa trước khi gửi.
+        Có thể dùng các từ khóa sau, hệ thống sẽ thay bằng dữ liệu thật:
+      </p>
+      <div class="zalo-ph">${Zalo.PLACEHOLDERS.map((p) => `<code>${U.esc(p)}</code>`).join(" ")}</div>
+      <form id="zaloTplForm" style="margin-top:14px;">
+        <div class="field" style="margin-bottom:14px;">
+          <label>Mẫu 1 — Sau khi khám xong</label>
+          <textarea name="sau_kham" rows="4">${U.esc(mauSauKham)}</textarea>
+        </div>
+        <div class="field" style="margin-bottom:16px;">
+          <label>Mẫu 2 — Nhắc tái khám</label>
+          <textarea name="nhac_tai_kham" rows="3">${U.esc(mauNhac)}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">💾 Lưu mẫu tin nhắn</button>
+        <button type="button" class="btn" id="btnResetTpl">Khôi phục mẫu gốc</button>
+      </form>
+    `;
+    root.appendChild(zaloCard);
+
+    zaloCard.querySelector("#zaloTplForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      try {
+        await Zalo.luuMau(Zalo.LOAI.SAU_KHAM, (fd.get("sau_kham") || "").trim());
+        await Zalo.luuMau(Zalo.LOAI.NHAC_TAI_KHAM, (fd.get("nhac_tai_kham") || "").trim());
+        U.toast("Đã lưu mẫu tin nhắn", "ok");
+      } catch (err) {
+        U.toast("Lỗi khi lưu mẫu: " + err.message, "err");
+      }
+    });
+
+    zaloCard.querySelector("#btnResetTpl").addEventListener("click", async () => {
+      const ok = await U.confirmBox("Khôi phục 2 mẫu tin nhắn về nội dung gốc?", {
+        title: "Khôi phục mẫu gốc",
+        okText: "Khôi phục",
+      });
+      if (!ok) return;
+      const f = zaloCard.querySelector("#zaloTplForm");
+      f.sau_kham.value = Zalo.MAU_MAC_DINH.sau_kham;
+      f.nhac_tai_kham.value = Zalo.MAU_MAC_DINH.nhac_tai_kham;
+      U.toast('Đã điền lại mẫu gốc — bấm "Lưu mẫu tin nhắn" để áp dụng', "ok");
+    });
   }
 
   return { get, save, render, DEFAULTS };

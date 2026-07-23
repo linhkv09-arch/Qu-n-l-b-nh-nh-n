@@ -16,6 +16,8 @@ const DB = (function () {
     visits: "visits",
     surgeries: "surgeries",
     meta: "app_meta",
+    messageTemplates: "message_templates", // mẫu tin nhắn Zalo
+    sentMessages: "tin_nhan_da_gui", // lịch sử tin nhắn Zalo
   };
 
   function sb() {
@@ -45,7 +47,7 @@ const DB = (function () {
     }
     return out;
   }
-  const NUMERIC = { created_at: 1, updated_at: 1 };
+  const NUMERIC = { created_at: 1, updated_at: 1, cap_nhat_luc: 1, gui_luc: 1, tao_luc: 1 };
   function fromRow(row) {
     const out = {};
     for (const k in row) {
