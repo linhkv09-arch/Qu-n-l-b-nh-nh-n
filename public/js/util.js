@@ -195,21 +195,50 @@ const U = (function () {
     });
   }
 
-  // ---- Ảnh: đọc file -> {id, kind, caption, blob, type} ----
-  function readImageFile(file, kind) {
-    return new Promise((resolve, reject) => {
-      if (!file.type || !file.type.startsWith("image/")) {
-        reject(new Error("Không phải file ảnh"));
-        return;
+  // ---- Ảnh: thu nhỏ trước khi lưu để tiết kiệm dung lượng Storage ----
+  // Cạnh dài tối đa 1600px, JPEG chất lượng 0.8 (ảnh điện thoại 2–4 MB -> ~200–400 KB).
+  // Ảnh đã nhỏ sẵn, hoặc trình duyệt không đọc được (vd. HEIC), thì giữ nguyên file gốc.
+  const IMG_MAX_SIDE = 1600;
+  const IMG_QUALITY = 0.8;
+  const IMG_SKIP_BYTES = 400 * 1024;
+  async function compressImage(file) {
+    if (file.type === "image/gif" || file.type === "image/svg+xml") return file;
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+      const scale = Math.min(1, IMG_MAX_SIDE / Math.max(bmp.width, bmp.height));
+      if (scale === 1 && file.size <= IMG_SKIP_BYTES) {
+        bmp.close();
+        return file;
       }
-      resolve({
-        id: uid(),
-        kind: kind || "khac",
-        caption: "",
-        type: file.type,
-        blob: file, // File là một Blob, IndexedDB lưu trực tiếp được
-      });
-    });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(bmp.width * scale);
+      canvas.height = Math.round(bmp.height * scale);
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff"; // nền trắng cho ảnh PNG trong suốt
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+      bmp.close();
+      const blob = await new Promise((r) => canvas.toBlob(r, "image/jpeg", IMG_QUALITY));
+      return blob && blob.size < file.size ? blob : file;
+    } catch (e) {
+      console.warn("Không thu nhỏ được ảnh, giữ ảnh gốc:", e);
+      return file;
+    }
+  }
+
+  // ---- Ảnh: đọc file -> {id, kind, caption, blob, type} ----
+  async function readImageFile(file, kind) {
+    if (!file.type || !file.type.startsWith("image/")) {
+      throw new Error("Không phải file ảnh");
+    }
+    const blob = await compressImage(file);
+    return {
+      id: uid(),
+      kind: kind || "khac",
+      caption: "",
+      type: blob.type || file.type,
+      blob,
+    };
   }
 
   // Tạo URL tạm để hiển thị ảnh từ blob
