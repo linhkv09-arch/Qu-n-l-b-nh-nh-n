@@ -153,6 +153,177 @@ const Zalo = (function () {
   }
 
   // ============================================================
+  //  ẢNH GỬI KÈM (ảnh nội soi... trong hồ sơ khám)
+  //  Zalo cá nhân không nhận ảnh qua link, nên gửi bằng:
+  //   - Điện thoại: bảng Chia sẻ của máy (Web Share) -> chọn Zalo
+  //   - Máy tính: chép từng ảnh rồi dán vào Zalo, hoặc tải ảnh về rồi kéo vào
+  // ============================================================
+  function srcAnh(img) {
+    if (img.blob) return U.blobUrl(img.blob);
+    return img.path ? DB.imageUrl(img.path) : "";
+  }
+  async function layBlobAnh(img) {
+    if (img.blob) return img.blob;
+    const res = await fetch(srcAnh(img));
+    if (!res.ok) throw new Error("Không tải được ảnh (" + res.status + ")");
+    return res.blob();
+  }
+  function tenFileAnh(patient, img, idx, blob) {
+    const ext = ((blob && blob.type) || img.type || "image/jpeg").split("/")[1] || "jpg";
+    const ten = U.noAccent(patient.name || "benh-nhan").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return `${ten}-${img.kind || "anh"}-${idx + 1}.${ext}`;
+  }
+  function coTheChiaSeFile() {
+    try {
+      return !!(
+        navigator.canShare &&
+        navigator.canShare({ files: [new File(["x"], "x.jpg", { type: "image/jpeg" })] })
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+  // Clipboard chỉ nhận ảnh PNG -> đổi JPEG sang PNG. Gọi write() ngay trong lượt bấm
+  // (truyền Promise cho ClipboardItem) để trình duyệt không chặn vì chờ quá lâu.
+  async function sangPng(blobPromise) {
+    const blob = await blobPromise;
+    if (blob.type === "image/png") return blob;
+    const bmp = await createImageBitmap(blob);
+    const c = document.createElement("canvas");
+    c.width = bmp.width;
+    c.height = bmp.height;
+    c.getContext("2d").drawImage(bmp, 0, 0);
+    bmp.close();
+    return new Promise((r) => c.toBlob(r, "image/png"));
+  }
+  async function chepAnh(blobPromise) {
+    if (!window.ClipboardItem || !navigator.clipboard || !navigator.clipboard.write) return false;
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": sangPng(blobPromise) })]);
+    return true;
+  }
+  function taiVe(blob, ten) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = ten;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  // Khối chọn ảnh gửi kèm; trả về null nếu hồ sơ không có ảnh
+  function khoiAnhGuiKem(patient, visit, layNoiDung) {
+    const images = ((visit && visit.images) || []).filter((im) => im.path || im.blob);
+    if (!images.length) return null;
+    // Ảnh nội soi lên trước và được chọn sẵn
+    images.sort((a, b) => (b.kind === "noisoi") - (a.kind === "noisoi"));
+    const coNoiSoi = images.some((im) => im.kind === "noisoi");
+
+    const wrap = document.createElement("div");
+    wrap.className = "field";
+    wrap.style.marginTop = "14px";
+    wrap.innerHTML = `
+      <label>Ảnh gửi kèm (bấm vào ảnh để chọn/bỏ)</label>
+      <div class="zalo-anh-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+        ${coTheChiaSeFile() ? '<button type="button" class="btn btn-gold za-share">📤 Chia sẻ ảnh + tin nhắn qua Zalo</button>' : ""}
+        <button type="button" class="btn za-tai">⬇️ Tải ảnh đã chọn</button>
+      </div>
+      <p class="hint" style="margin-top:6px;">
+        ${
+          coTheChiaSeFile()
+            ? "<b>Điện thoại:</b> bấm <b>Chia sẻ</b> → chọn <b>Zalo</b> → chọn bệnh nhân. Nội dung tin nhắn đã được chép sẵn — nếu Zalo chỉ gửi ảnh, giữ ô chat → <b>Dán</b>.<br>"
+            : ""
+        }
+        <b>Máy tính:</b> mở Zalo của bệnh nhân, dán tin nhắn; rồi bấm <b>📋 Chép</b> dưới từng ảnh và <b>Ctrl+V</b> vào khung chat
+        (hoặc tải ảnh về rồi kéo vào Zalo).
+      </p>`;
+
+    const list = wrap.querySelector(".zalo-anh-list");
+    const chon = images.map((im) => (coNoiSoi ? im.kind === "noisoi" : true));
+    const blobs = images.map(() => null);
+    // Tải trước ảnh để lúc bấm Chia sẻ gọi được ngay (trình duyệt chặn nếu chờ lâu)
+    const sanSang = images.map((im, k) =>
+      layBlobAnh(im).then((b) => (blobs[k] = b)).catch((e) => console.warn("Ảnh gửi kèm:", e.message))
+    );
+
+    images.forEach((im, k) => {
+      const o = document.createElement("div");
+      o.style.cssText = "width:110px;text-align:center;font-size:12px;";
+      o.innerHTML = `
+        <div class="za-thumb" style="position:relative;cursor:pointer;border-radius:8px;overflow:hidden;border:3px solid transparent;">
+          <img src="${U.esc(srcAnh(im))}" alt="" style="display:block;width:100%;height:80px;object-fit:cover;" />
+          <span class="za-tick" style="position:absolute;top:4px;right:4px;background:#fff;border-radius:50%;width:22px;height:22px;line-height:22px;font-weight:700;"></span>
+        </div>
+        <div class="muted" style="margin:3px 0;">${U.esc(U.imgKindLabel(im.kind))}</div>
+        <button type="button" class="btn btn-sm za-chep">📋 Chép</button>`;
+      const th = o.querySelector(".za-thumb");
+      const ve = () => {
+        th.style.borderColor = chon[k] ? "var(--gold, #d4a017)" : "transparent";
+        th.style.opacity = chon[k] ? "1" : "0.55";
+        o.querySelector(".za-tick").textContent = chon[k] ? "✓" : "";
+      };
+      th.addEventListener("click", () => {
+        chon[k] = !chon[k];
+        ve();
+      });
+      o.querySelector(".za-chep").addEventListener("click", async () => {
+        try {
+          const ok = await chepAnh(
+            sanSang[k].then(() => {
+              if (!blobs[k]) throw new Error("ảnh chưa tải được");
+              return blobs[k];
+            })
+          );
+          U.toast(ok ? "Đã chép ảnh — dán (Ctrl+V) vào Zalo" : "Trình duyệt không cho chép ảnh, hãy tải ảnh về", ok ? "ok" : "err");
+        } catch (e) {
+          U.toast("Không chép được ảnh: " + e.message, "err");
+        }
+      });
+      ve();
+      list.appendChild(o);
+    });
+
+    const daChon = () => images.map((im, k) => k).filter((k) => chon[k]);
+
+    const btnShare = wrap.querySelector(".za-share");
+    if (btnShare) {
+      btnShare.addEventListener("click", async () => {
+        const ks = daChon();
+        if (!ks.length) return U.toast("Chưa chọn ảnh nào", "err");
+        await Promise.all(ks.map((k) => sanSang[k]));
+        const files = ks
+          .filter((k) => blobs[k])
+          .map((k) => new File([blobs[k]], tenFileAnh(patient, images[k], k, blobs[k]), { type: blobs[k].type || "image/jpeg" }));
+        if (!files.length) return U.toast("Không tải được ảnh để chia sẻ", "err");
+        const text = layNoiDung();
+        await saoChep(text); // phòng khi Zalo bỏ phần chữ
+        try {
+          await navigator.share({ files, text });
+        } catch (e) {
+          if (e.name !== "AbortError") U.toast("Không mở được bảng chia sẻ: " + e.message, "err");
+        }
+      });
+    }
+
+    wrap.querySelector(".za-tai").addEventListener("click", async () => {
+      const ks = daChon();
+      if (!ks.length) return U.toast("Chưa chọn ảnh nào", "err");
+      await Promise.all(ks.map((k) => sanSang[k]));
+      let n = 0;
+      ks.forEach((k, j) => {
+        if (!blobs[k]) return;
+        n++;
+        setTimeout(() => taiVe(blobs[k], tenFileAnh(patient, images[k], k, blobs[k])), j * 300);
+      });
+      U.toast(n ? `Đang tải ${n} ảnh về máy` : "Không tải được ảnh", n ? "ok" : "err");
+    });
+
+    return wrap;
+  }
+
+  // ============================================================
   //  HỘP THOẠI TIN NHẮN ZALO (dùng chung 2 luồng)
   //  opts: { patient, visit, loai, onSent }
   // ============================================================
@@ -226,6 +397,8 @@ const Zalo = (function () {
     });
 
     const ta = body.querySelector(".zalo-text");
+    const khoiAnh = khoiAnhGuiKem(patient, visit, () => ta.value);
+    if (khoiAnh) body.appendChild(khoiAnh);
     btnDong.addEventListener("click", modal.close);
 
     btnChep.addEventListener("click", async () => {
