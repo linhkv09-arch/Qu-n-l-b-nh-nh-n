@@ -216,9 +216,11 @@ const Zalo = (function () {
   function khoiAnhGuiKem(patient, visit, layNoiDung) {
     const images = ((visit && visit.images) || []).filter((im) => im.path || im.blob);
     if (!images.length) return null;
-    // Ảnh nội soi lên trước và được chọn sẵn
-    images.sort((a, b) => (b.kind === "noisoi") - (a.kind === "noisoi"));
-    const coNoiSoi = images.some((im) => im.kind === "noisoi");
+    // Ảnh nội soi, rồi đơn thuốc lên trước và được chọn sẵn
+    const THU_TU = { noisoi: 0, donthuoc: 1 };
+    const thuTu = (im) => (im.kind in THU_TU ? THU_TU[im.kind] : 2);
+    images.sort((a, b) => thuTu(a) - thuTu(b));
+    const coAnhChinh = images.some((im) => thuTu(im) < 2);
 
     const wrap = document.createElement("div");
     wrap.className = "field";
@@ -241,7 +243,7 @@ const Zalo = (function () {
       </p>`;
 
     const list = wrap.querySelector(".zalo-anh-list");
-    const chon = images.map((im) => (coNoiSoi ? im.kind === "noisoi" : true));
+    const chon = images.map((im) => (coAnhChinh ? thuTu(im) < 2 : true));
     const blobs = images.map(() => null);
     // Tải trước ảnh để lúc bấm Chia sẻ gọi được ngay (trình duyệt chặn nếu chờ lâu)
     const sanSang = images.map((im, k) =>
