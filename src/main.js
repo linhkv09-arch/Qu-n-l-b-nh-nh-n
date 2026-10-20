@@ -9,6 +9,9 @@
 
 import { createClient } from "@supabase/supabase-js";
 
+// Chụp tờ đơn thuốc thành ảnh (gửi kèm Zalo) — chỉ tải thư viện khi cần
+window.loadHtml2canvas = () => import("html2canvas").then((m) => m.default);
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 

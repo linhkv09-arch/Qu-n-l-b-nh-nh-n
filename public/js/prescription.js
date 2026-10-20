@@ -188,6 +188,36 @@ const Rx = (function () {
     printBtn.addEventListener("click", () => printSheet(sheet));
   }
 
+  // Lần khám có kê đơn trong app không (danh sách thuốc hoặc đơn dạng chữ cũ)
+  function coDon(visit) {
+    return !!(
+      visit &&
+      ((visit.meds && visit.meds.some((m) => (m.name || "").trim())) || (visit.medications || "").trim())
+    );
+  }
+
+  // ---- Chụp tờ đơn thành ảnh JPEG (để gửi kèm Zalo) ----
+  async function sheetImage(patient, visit) {
+    if (!window.loadHtml2canvas) throw new Error("Chưa tải được công cụ tạo ảnh");
+    const [html2canvas, s] = await Promise.all([window.loadHtml2canvas(), Settings.get()]);
+    const sheet = buildSheet(patient, visit, s);
+    sheet.style.boxShadow = "none";
+    // Dựng ngoài màn hình, đủ rộng để tờ đơn giữ đúng khổ A5
+    const holder = document.createElement("div");
+    holder.style.cssText = "position:fixed;left:-10000px;top:0;width:800px;background:#fff;";
+    holder.appendChild(sheet);
+    document.body.appendChild(holder);
+    try {
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      const canvas = await html2canvas(sheet, { scale: 2, backgroundColor: "#ffffff", logging: false });
+      const blob = await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.9));
+      if (!blob) throw new Error("Không tạo được ảnh đơn thuốc");
+      return blob;
+    } finally {
+      holder.remove();
+    }
+  }
+
   // Mở đơn thuốc từ 1 lần khám (tự lấy bệnh nhân)
   async function previewFromVisit(visit) {
     const p = await Patients.get(visit.patientId);
@@ -195,5 +225,5 @@ const Rx = (function () {
     return preview(p, visit);
   }
 
-  return { medsEditor, buildSheet, printSheet, preview, previewFromVisit, UNITS };
+  return { medsEditor, buildSheet, printSheet, preview, previewFromVisit, coDon, sheetImage, UNITS };
 })();

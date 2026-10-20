@@ -159,10 +159,12 @@ const Zalo = (function () {
   //   - Máy tính: chép từng ảnh rồi dán vào Zalo, hoặc tải ảnh về rồi kéo vào
   // ============================================================
   function srcAnh(img) {
+    if (img.tuApp) return ""; // ảnh tờ đơn trong app: hiện sau khi tạo xong
     if (img.blob) return U.blobUrl(img.blob);
     return img.path ? DB.imageUrl(img.path) : "";
   }
-  async function layBlobAnh(img) {
+  async function layBlobAnh(img, patient, visit) {
+    if (img.tuApp) return Rx.sheetImage(patient, visit);
     if (img.blob) return img.blob;
     const res = await fetch(srcAnh(img));
     if (!res.ok) throw new Error("Không tải được ảnh (" + res.status + ")");
@@ -215,6 +217,8 @@ const Zalo = (function () {
   // Khối chọn ảnh gửi kèm; trả về null nếu hồ sơ không có ảnh
   function khoiAnhGuiKem(patient, visit, layNoiDung) {
     const images = ((visit && visit.images) || []).filter((im) => im.path || im.blob);
+    // Tờ đơn thuốc kê trong app -> chụp thành ảnh (đứng trước ảnh đơn chụp tay)
+    if (typeof Rx !== "undefined" && Rx.coDon(visit)) images.unshift({ id: "rx-app", kind: "donthuoc", tuApp: true });
     if (!images.length) return null;
     // Ảnh nội soi, rồi đơn thuốc lên trước và được chọn sẵn
     const THU_TU = { noisoi: 0, donthuoc: 1 };
@@ -247,7 +251,9 @@ const Zalo = (function () {
     const blobs = images.map(() => null);
     // Tải trước ảnh để lúc bấm Chia sẻ gọi được ngay (trình duyệt chặn nếu chờ lâu)
     const sanSang = images.map((im, k) =>
-      layBlobAnh(im).then((b) => (blobs[k] = b)).catch((e) => console.warn("Ảnh gửi kèm:", e.message))
+      layBlobAnh(im, patient, visit)
+        .then((b) => (blobs[k] = b))
+        .catch((e) => console.warn("Ảnh gửi kèm:", e.message))
     );
 
     images.forEach((im, k) => {
@@ -255,12 +261,19 @@ const Zalo = (function () {
       o.style.cssText = "width:110px;text-align:center;font-size:12px;";
       o.innerHTML = `
         <div class="za-thumb" style="position:relative;cursor:pointer;border-radius:8px;overflow:hidden;border:3px solid transparent;">
-          <img src="${U.esc(srcAnh(im))}" alt="" style="display:block;width:100%;height:80px;object-fit:cover;" />
+          <img src="${U.esc(srcAnh(im))}" alt="${im.tuApp ? "Đang tạo ảnh đơn..." : ""}" style="display:block;width:100%;height:80px;object-fit:cover;object-position:top;background:#f3f5f8;font-size:11px;" />
           <span class="za-tick" style="position:absolute;top:4px;right:4px;background:#fff;border-radius:50%;width:22px;height:22px;line-height:22px;font-weight:700;"></span>
         </div>
-        <div class="muted" style="margin:3px 0;">${U.esc(U.imgKindLabel(im.kind))}</div>
+        <div class="muted" style="margin:3px 0;">${im.tuApp ? "Đơn thuốc (app)" : U.esc(U.imgKindLabel(im.kind))}</div>
         <button type="button" class="btn btn-sm za-chep">📋 Chép</button>`;
       const th = o.querySelector(".za-thumb");
+      if (im.tuApp) {
+        const anh = th.querySelector("img");
+        sanSang[k].then(() => {
+          if (blobs[k]) anh.src = U.blobUrl(blobs[k]);
+          else anh.alt = "Không tạo được ảnh đơn";
+        });
+      }
       const ve = () => {
         th.style.borderColor = chon[k] ? "var(--gold, #d4a017)" : "transparent";
         th.style.opacity = chon[k] ? "1" : "0.55";
