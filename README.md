@@ -7,7 +7,8 @@ cập nhật **theo thời gian thực**, có **đăng nhập** riêng cho từn
 ## Tính năng
 
 - **Lịch hẹn khám**: ghi lại lịch hẹn khi bệnh nhân gọi điện, nhắc đúng ngày (gọi điện/Zalo).
-- **Nhắc việc qua Telegram**: tự gửi tóm tắt lịch hẹn + tái khám quá hạn mỗi sáng (tùy chọn).
+- **Nhắc việc qua Telegram**: tự gửi tóm tắt lịch hẹn + tái khám quá hạn mỗi sáng 8h (tùy chọn,
+  có tự gửi bù vào 12h/17h nếu lượt 8h bị lỗi).
 - **Quản lý bệnh nhân**: hồ sơ, tìm kiếm, lịch sử khám theo dòng thời gian.
 - **Khám bệnh**: triệu chứng, chẩn đoán, điều trị; đính kèm ảnh nội soi & đơn thuốc.
 - **Kê & in đơn thuốc**: nhập thuốc có cấu trúc, in đơn khổ A5 theo mẫu.

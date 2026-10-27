@@ -177,9 +177,19 @@ F3. KHAI BÁO BIẾN MÔI TRƯỜNG TRÊN VERCEL:
 F4. KIỂM TRA:
     - Mở app → "Cài đặt" → mục "🔔 Nhắc việc qua Telegram" → bấm
       "Gửi thử ngay" → kiểm tra có tin nhắn hiện trong Telegram.
-    - Theo lịch, hệ thống tự gửi mỗi ngày lúc 7:00 sáng (giờ Việt Nam).
-      Muốn đổi giờ: sửa dòng "schedule" trong file vercel.json
-      (giờ UTC = giờ Việt Nam trừ 7; vd 7:00 VN → "0 0 * * *").
+    - Theo lịch, hệ thống tự gửi mỗi ngày lúc 8:00 sáng (giờ Việt Nam).
+      Hệ thống chạy trên máy chủ Vercel (không phải máy tính của bạn),
+      nên KHÔNG cần máy tính/điện thoại phải mở hay online lúc 8h —
+      cứ để điện thoại Telegram online là nhận được tin.
+    - CÓ GỬI BÙ: nếu lượt 8h sáng vì lý do nào đó không gửi được
+      (ví dụ Vercel gặp sự cố tạm thời), hệ thống tự kiểm tra và gửi bù
+      vào 12:00 trưa, rồi 17:00 chiều cùng ngày — không cần làm gì thêm.
+      Nếu lượt 8h đã gửi thành công, các lượt 12h/17h sẽ tự bỏ qua
+      (không gửi trùng).
+    - Muốn đổi giờ gửi chính hoặc giờ gửi bù: sửa các dòng "schedule"
+      trong mảng "crons" ở file vercel.json (giờ UTC = giờ Việt Nam
+      trừ 7; vd 8:00 VN → "0 1 * * *", 12:00 VN → "0 5 * * *",
+      17:00 VN → "0 10 * * *").
 
 ========================================================
 GHI CHÚ BẢO MẬT

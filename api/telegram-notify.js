@@ -33,19 +33,24 @@ function escHtml(s) {
   return String(s == null ? "" : s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 }
 
+// Khóa app_meta lưu ngày đã gửi báo cáo gần nhất (để chống gửi trùng khi có nhiều lượt cron/ngày)
+const META_KEY_BAO_CAO = "telegram_bao_cao_cuoi";
+
 // ---- Xác thực: gọi từ Vercel Cron (CRON_SECRET) hoặc từ app (token đăng nhập Supabase) ----
-async function isAuthorized(req, admin) {
+// Trả về "cron" | "user" | null — phân biệt để biết có nên bỏ qua (nếu hôm nay đã gửi) hay luôn gửi (bấm thử tay).
+async function authType(req, admin) {
   const auth = req.headers.authorization || "";
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && auth === `Bearer ${cronSecret}`) return true;
+  if (cronSecret && auth === `Bearer ${cronSecret}`) return "cron";
   const token = auth.replace(/^Bearer\s+/i, "").trim();
-  if (!token) return false;
+  if (!token) return null;
   try {
     const { data, error } = await admin.auth.getUser(token);
-    return !!(data && data.user) && !error;
+    if (data && data.user && !error) return "user";
   } catch (e) {
-    return false;
+    /* ignore */
   }
+  return null;
 }
 
 // ---- Lịch hẹn cần gọi/nhắc: giống widget Trang chủ (status cho/da_nhac, ngày <= hôm nay) ----
@@ -152,12 +157,25 @@ export default async function handler(req, res) {
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
-  if (!(await isAuthorized(req, admin))) {
+  const kind = await authType(req, admin);
+  if (!kind) {
     return res.status(401).json({ error: "unauthorized" });
   }
 
   try {
     const today = todayISO();
+
+    // Nếu là lượt cron (tự động) và hôm nay đã gửi báo cáo rồi (ở 1 trong các lượt cron/ngày) -> bỏ qua, tránh gửi trùng.
+    // Lượt "Gửi thử ngay" (kind === "user") luôn gửi, không bị chặn bởi việc đã gửi hôm nay.
+    if (kind === "cron") {
+      const lastRes = await admin.from("app_meta").select("value").eq("key", META_KEY_BAO_CAO).maybeSingle();
+      if (lastRes.error) throw lastRes.error;
+      const last = lastRes.data && lastRes.data.value;
+      if (last && last.date === today) {
+        return res.status(200).json({ ok: true, skipped: true, message: "Đã gửi báo cáo hôm nay rồi" });
+      }
+    }
+
     const [apRes, vRes, sRes, pRes, metaRes, msgRes] = await Promise.all([
       admin.from("appointments").select("*"),
       admin.from("visits").select("id,patient_id,date,follow_up_date"),
@@ -186,6 +204,9 @@ export default async function handler(req, res) {
         detail: tgData,
       });
     }
+
+    // Ghi lại "đã gửi báo cáo hôm nay" để các lượt cron gửi bù sau trong ngày không gửi trùng nữa.
+    await admin.from("app_meta").upsert({ key: META_KEY_BAO_CAO, value: { date: today, sentAt: Date.now() } });
 
     return res.status(200).json({ ok: true, lichHen: lichHen.length, taiKham: taiKham.length });
   } catch (e) {
