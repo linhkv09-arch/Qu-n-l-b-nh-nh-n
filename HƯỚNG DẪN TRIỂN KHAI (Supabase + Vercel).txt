@@ -137,12 +137,59 @@ Chỉ làm nếu bản cũ (IndexedDB) đã có dữ liệu bệnh nhân thật:
 
 
 ========================================================
+PHẦN F — (TÙY CHỌN) NHẮC VIỆC QUA TELEGRAM
+========================================================
+
+Mỗi sáng, hệ thống có thể tự gửi tin nhắn Telegram tóm tắt "lịch hẹn
+cần gọi/nhắc" + "tái khám quá hạn", để bác sĩ không cần mở app vẫn
+biết hôm nay cần gọi ai. Làm theo các bước sau (chỉ 1 lần):
+
+F1. TẠO BOT TELEGRAM:
+    - Mở Telegram, tìm và chat với "@BotFather".
+    - Gửi lệnh  /newbot  → đặt tên bot (vd "PK Linh Nhắc Việc")
+      → đặt username bot, PHẢI kết thúc bằng "bot" (vd "pklinh_nhac_bot").
+    - BotFather trả về 1 dòng "HTTP API" dạng:
+        123456789:AAH-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      → đây là  TELEGRAM_BOT_TOKEN , lưu lại, GIỮ BÍ MẬT.
+
+F2. LẤY CHAT ID CỦA BẠN:
+    - Trong Telegram, tìm đúng bot vừa tạo (theo username ở trên)
+      → bấm "Start" (hoặc gửi bất kỳ tin nhắn nào cho bot).
+    - Mở trình duyệt, vào địa chỉ (thay TOKEN bằng token ở F1):
+        https://api.telegram.org/botTOKEN/getUpdates
+    - Tìm đoạn  "chat":{"id":123456789, ...}  → số đó chính là
+      TELEGRAM_CHAT_ID . (Nếu trang trống, nhắn lại cho bot rồi tải
+      lại trang.)
+
+F3. KHAI BÁO BIẾN MÔI TRƯỜNG TRÊN VERCEL:
+    - Vào Vercel → chọn Project → Settings → Environment Variables,
+      thêm các biến sau (áp dụng cho "Production"):
+        TELEGRAM_BOT_TOKEN        = token lấy ở F1
+        TELEGRAM_CHAT_ID          = số lấy ở F2
+        SUPABASE_URL              = giống VITE_SUPABASE_URL (bỏ tiền tố VITE_)
+        SUPABASE_SERVICE_ROLE_KEY = khóa "service_role" (Supabase > Project
+                                     Settings > API) — KHÔNG phải anon key
+        CRON_SECRET               = 1 chuỗi ký tự ngẫu nhiên bất kỳ tự đặt
+                                     (dùng để Vercel tự xác thực khi chạy
+                                     theo lịch, không cần nhớ/gõ lại)
+    - Vào tab "Deployments" → bấm "Redeploy" để áp dụng biến mới.
+
+F4. KIỂM TRA:
+    - Mở app → "Cài đặt" → mục "🔔 Nhắc việc qua Telegram" → bấm
+      "Gửi thử ngay" → kiểm tra có tin nhắn hiện trong Telegram.
+    - Theo lịch, hệ thống tự gửi mỗi ngày lúc 7:00 sáng (giờ Việt Nam).
+      Muốn đổi giờ: sửa dòng "schedule" trong file vercel.json
+      (giờ UTC = giờ Việt Nam trừ 7; vd 7:00 VN → "0 0 * * *").
+
+========================================================
 GHI CHÚ BẢO MẬT
 ========================================================
 - Chỉ dùng khóa "anon public" cho web (Vercel). Khóa này công khai
   được vì dữ liệu đã được bảo vệ bằng đăng nhập + RLS.
-- Khóa "service_role" chỉ dùng cho script migration trên máy tin cậy,
-  TUYỆT ĐỐI không đưa lên web/GitHub.
+- Khóa "service_role" chỉ dùng cho script migration trên máy tin cậy và
+  cho biến môi trường SUPABASE_SERVICE_ROLE_KEY ở Phần F (chỉ chạy phía
+  server trong api/telegram-notify.js, trình duyệt không đọc được),
+  TUYỆT ĐỐI không đưa lên web/GitHub, không gán vào biến có tiền tố VITE_.
 - Ảnh để ở bucket công khai (đường dẫn ngẫu nhiên khó đoán). Nếu muốn
   chặt hơn (chỉ người đăng nhập xem được ảnh), báo để chuyển sang
   bucket riêng tư + link có hạn.

@@ -160,6 +160,49 @@ const Settings = (function () {
       f.nhac_hen_kham.value = Zalo.MAU_MAC_DINH.nhac_hen_kham;
       U.toast('Đã điền lại mẫu gốc — bấm "Lưu mẫu tin nhắn" để áp dụng', "ok");
     });
+
+    // ============================================================
+    //  THÔNG BÁO QUA TELEGRAM
+    // ============================================================
+    const tgCard = document.createElement("div");
+    tgCard.className = "card card-pad";
+    tgCard.style.marginTop = "16px";
+    tgCard.innerHTML = `
+      <h3 style="margin-top:0;color:var(--blue-deep);">🔔 Nhắc việc qua Telegram</h3>
+      <p class="muted" style="font-size:14px;line-height:1.6;">
+        Mỗi sáng, hệ thống tự gửi tin nhắn Telegram tóm tắt "lịch hẹn cần gọi/nhắc" và
+        "tái khám quá hạn" (cần thiết lập Bot Telegram trong Vercel — xem
+        <code>HƯỚNG DẪN TRIỂN KHAI (Supabase + Vercel).txt</code>).
+        Bấm nút dưới đây để gửi thử ngay.
+      </p>
+      <button type="button" class="btn btn-primary" id="btnTgTest">📨 Gửi thử ngay</button>
+    `;
+    root.appendChild(tgCard);
+    tgCard.querySelector("#btnTgTest").addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      btn.textContent = "Đang gửi...";
+      try {
+        const { data, error: sessErr } = await window.sb.auth.getSession();
+        if (sessErr) throw sessErr;
+        const token = data && data.session && data.session.access_token;
+        if (!token) throw new Error("Chưa đăng nhập");
+        const res = await fetch("/api/telegram-notify", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error || "Lỗi không rõ (" + res.status + ")");
+        U.toast(
+          `Đã gửi Telegram — ${body.lichHen || 0} lịch hẹn, ${body.taiKham || 0} ca tái khám quá hạn`,
+          "ok"
+        );
+      } catch (err) {
+        U.toast("Không gửi được: " + err.message, "err");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "📨 Gửi thử ngay";
+      }
+    });
   }
 
   return { get, save, render, DEFAULTS };

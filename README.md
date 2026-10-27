@@ -7,6 +7,7 @@ cập nhật **theo thời gian thực**, có **đăng nhập** riêng cho từn
 ## Tính năng
 
 - **Lịch hẹn khám**: ghi lại lịch hẹn khi bệnh nhân gọi điện, nhắc đúng ngày (gọi điện/Zalo).
+- **Nhắc việc qua Telegram**: tự gửi tóm tắt lịch hẹn + tái khám quá hạn mỗi sáng (tùy chọn).
 - **Quản lý bệnh nhân**: hồ sơ, tìm kiếm, lịch sử khám theo dòng thời gian.
 - **Khám bệnh**: triệu chứng, chẩn đoán, điều trị; đính kèm ảnh nội soi & đơn thuốc.
 - **Kê & in đơn thuốc**: nhập thuốc có cấu trúc, in đơn khổ A5 theo mẫu.
@@ -19,7 +20,7 @@ cập nhật **theo thời gian thực**, có **đăng nhập** riêng cho từn
 
 - Giao diện: HTML/CSS/JavaScript thuần (các module trong `public/js`).
 - Build/dev: **Vite**. Backend dữ liệu: **Supabase** (Postgres + Auth + Storage + Realtime).
-- Triển khai: **Vercel**.
+- Triển khai: **Vercel** (+ Serverless Function & Cron Job cho nhắc việc Telegram).
 
 ## Cấu trúc thư mục
 
@@ -28,6 +29,7 @@ index.html            – trang chính (entry của Vite)
 src/main.js           – tạo Supabase client, đăng nhập, realtime
 public/js/*.js         – các module giao diện (db.js = tầng dữ liệu Supabase)
 public/css/styles.css  – giao diện
+api/telegram-notify.js – Vercel Function: gửi tóm tắt nhắc việc qua Telegram (cron hằng ngày)
 supabase/schema.sql    – tạo bảng, RLS, Storage, realtime (chạy trong Supabase)
 migrate/import-backup.mjs – script nhập dữ liệu cũ (nếu có)
 .env.example           – mẫu biến môi trường
