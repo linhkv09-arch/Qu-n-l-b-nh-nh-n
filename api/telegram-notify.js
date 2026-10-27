@@ -179,9 +179,12 @@ export default async function handler(req, res) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true }),
     });
-    const tgData = await tgRes.json();
+    const tgData = await tgRes.json().catch(() => ({}));
     if (!tgRes.ok || !tgData.ok) {
-      return res.status(502).json({ error: "Gửi Telegram thất bại", detail: tgData });
+      return res.status(502).json({
+        error: "Telegram từ chối gửi: " + (tgData.description || `HTTP ${tgRes.status}`),
+        detail: tgData,
+      });
     }
 
     return res.status(200).json({ ok: true, lichHen: lichHen.length, taiKham: taiKham.length });
