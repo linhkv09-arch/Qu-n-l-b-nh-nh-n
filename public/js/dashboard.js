@@ -217,6 +217,52 @@ const Dashboard = (function () {
     `;
     root.appendChild(stats);
 
+    // ============================================================
+    //  LỊCH HẸN KHÁM (bệnh nhân hẹn qua điện thoại) — hôm nay & quá hạn chưa nhắc
+    // ============================================================
+    let apUpcoming = [];
+    try {
+      apUpcoming = await Appointments.collectUpcoming();
+    } catch (e) {
+      console.warn("Không đọc được lịch hẹn:", e.message);
+    }
+    const apCanNhac = apUpcoming.filter((a) => a.days <= 0);
+    if (apCanNhac.length) {
+      const apWrap = document.createElement("div");
+      apWrap.innerHTML = `
+        <div class="section-title"><span>📞 Lịch hẹn cần gọi/nhắc <span class="badge badge-warn">${apCanNhac.length}</span></span></div>
+        <div class="card"><div class="table-wrap"><table class="data">
+          <thead><tr><th>Bệnh nhân</th><th>Điện thoại</th><th>Ngày hẹn</th><th>Tình trạng</th><th></th></tr></thead>
+          <tbody>
+          ${apCanNhac
+            .map((a) => {
+              const tt =
+                a.days < 0
+                  ? `<span class="badge badge-danger">Quá ${Math.abs(a.days)} ngày</span>`
+                  : `<span class="badge badge-warn">Hôm nay${a.time ? " · " + U.esc(a.time) : ""}</span>`;
+              const tel = a.phone ? `<a class="btn btn-sm" href="tel:${U.esc(a.phone)}">📞 Gọi</a>` : "";
+              return `<tr>
+                <td><strong>${U.esc(a.name)}</strong></td>
+                <td class="nowrap">${U.esc(a.phone || "—")}</td>
+                <td class="nowrap">${U.fmtDate(a.date)}</td>
+                <td class="nowrap">${tt}</td>
+                <td class="text-right nowrap">${tel}
+                  <button class="btn btn-sm btn-gold ap-zalo" data-id="${a.id}">💬 Nhắc Zalo</button>
+                </td>
+              </tr>`;
+            })
+            .join("")}
+          </tbody>
+        </table></div></div>`;
+      root.appendChild(apWrap);
+      apWrap.querySelectorAll(".ap-zalo").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const a = apCanNhac.find((x) => x.id === btn.dataset.id);
+          Appointments.nhacZalo(a, rerender);
+        });
+      });
+    }
+
     // Nhãn lần nhắc tiếp theo cho ca tới ngày nhắc lại
     const nhanLanNhac = (i) =>
       i.nhac && !i.nhac.huy

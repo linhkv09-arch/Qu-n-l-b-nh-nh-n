@@ -22,6 +22,17 @@ hoặc kéo file index.html ra màn hình Desktop tạo lối tắt.
   - NHẮC LỊCH TÁI KHÁM: danh sách bệnh nhân quá hạn / sắp đến
     hạn tái khám. Bấm vào một dòng để mở hồ sơ bệnh nhân.
 
+• LỊCH HẸN:
+  - Khi bệnh nhân gọi điện hẹn khám, bấm "Thêm lịch hẹn": nhập tên
+    (gõ tên bệnh nhân cũ sẽ hiện gợi ý để liên kết hồ sơ, hoặc để
+    trống/nhập tên mới nếu là người gọi lần đầu), số điện thoại,
+    ngày (và giờ nếu có), lý do khám.
+  - Đến ngày hẹn, lịch hẹn tự hiện ở mục "Lịch hẹn" và ở Trang chủ
+    để nhắc gọi lại/nhắn Zalo cho bệnh nhân.
+  - Bấm "📞 Gọi" để gọi điện ngay, "💬 Nhắc Zalo" để soạn & gửi tin
+    nhắc qua Zalo (tự đánh dấu đã nhắc), "✔ Đã đến" khi bệnh nhân
+    đã đến khám, "✖ Không đến" nếu bệnh nhân không đến.
+
 • BỆNH NHÂN:
   - Thêm bệnh nhân mới (tự động sinh mã BN0001, BN0002...).
   - Tìm kiếm theo tên, mã, số điện thoại (gõ có dấu hay không dấu đều được).

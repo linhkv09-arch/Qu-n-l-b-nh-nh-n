@@ -5,6 +5,7 @@
 const App = (function () {
   const views = {
     dashboard: { title: "Trang chủ", module: () => Dashboard },
+    appointments: { title: "Lịch hẹn", module: () => Appointments },
     patients: { title: "Bệnh nhân", module: () => Patients },
     visits: { title: "Khám bệnh", module: () => Visits },
     surgeries: { title: "Phẫu thuật", module: () => Surgeries },

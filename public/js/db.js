@@ -15,6 +15,7 @@ const DB = (function () {
     patients: "patients",
     visits: "visits",
     surgeries: "surgeries",
+    appointments: "appointments",
     meta: "app_meta",
     messageTemplates: "message_templates", // mẫu tin nhắn Zalo
     sentMessages: "tin_nhan_da_gui", // lịch sử tin nhắn Zalo

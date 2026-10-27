@@ -104,6 +104,7 @@ const Settings = (function () {
     // ============================================================
     const mauSauKham = await Zalo.layMau(Zalo.LOAI.SAU_KHAM);
     const mauNhac = await Zalo.layMau(Zalo.LOAI.NHAC_TAI_KHAM);
+    const mauHen = await Zalo.layMau(Zalo.LOAI.NHAC_HEN_KHAM);
 
     const zaloCard = document.createElement("div");
     zaloCard.className = "card card-pad";
@@ -124,6 +125,10 @@ const Settings = (function () {
           <label>Mẫu 2 — Nhắc tái khám</label>
           <textarea name="nhac_tai_kham" rows="3">${U.esc(mauNhac)}</textarea>
         </div>
+        <div class="field" style="margin-bottom:16px;">
+          <label>Mẫu 3 — Nhắc lịch hẹn (bệnh nhân hẹn qua điện thoại)</label>
+          <textarea name="nhac_hen_kham" rows="3">${U.esc(mauHen)}</textarea>
+        </div>
         <button type="submit" class="btn btn-primary">💾 Lưu mẫu tin nhắn</button>
         <button type="button" class="btn" id="btnResetTpl">Khôi phục mẫu gốc</button>
       </form>
@@ -136,6 +141,7 @@ const Settings = (function () {
       try {
         await Zalo.luuMau(Zalo.LOAI.SAU_KHAM, (fd.get("sau_kham") || "").trim());
         await Zalo.luuMau(Zalo.LOAI.NHAC_TAI_KHAM, (fd.get("nhac_tai_kham") || "").trim());
+        await Zalo.luuMau(Zalo.LOAI.NHAC_HEN_KHAM, (fd.get("nhac_hen_kham") || "").trim());
         U.toast("Đã lưu mẫu tin nhắn", "ok");
       } catch (err) {
         U.toast("Lỗi khi lưu mẫu: " + err.message, "err");
@@ -143,7 +149,7 @@ const Settings = (function () {
     });
 
     zaloCard.querySelector("#btnResetTpl").addEventListener("click", async () => {
-      const ok = await U.confirmBox("Khôi phục 2 mẫu tin nhắn về nội dung gốc?", {
+      const ok = await U.confirmBox("Khôi phục các mẫu tin nhắn về nội dung gốc?", {
         title: "Khôi phục mẫu gốc",
         okText: "Khôi phục",
       });
@@ -151,6 +157,7 @@ const Settings = (function () {
       const f = zaloCard.querySelector("#zaloTplForm");
       f.sau_kham.value = Zalo.MAU_MAC_DINH.sau_kham;
       f.nhac_tai_kham.value = Zalo.MAU_MAC_DINH.nhac_tai_kham;
+      f.nhac_hen_kham.value = Zalo.MAU_MAC_DINH.nhac_hen_kham;
       U.toast('Đã điền lại mẫu gốc — bấm "Lưu mẫu tin nhắn" để áp dụng', "ok");
     });
   }

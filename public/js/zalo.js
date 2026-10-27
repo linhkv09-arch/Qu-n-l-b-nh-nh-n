@@ -10,11 +10,12 @@
  * ============================================================ */
 
 const Zalo = (function () {
-  const LOAI = { SAU_KHAM: "sau_kham", NHAC_TAI_KHAM: "nhac_tai_kham" };
+  const LOAI = { SAU_KHAM: "sau_kham", NHAC_TAI_KHAM: "nhac_tai_kham", NHAC_HEN_KHAM: "nhac_hen_kham" };
 
   const NHAN_LOAI = {
     sau_kham: "Sau khám",
     nhac_tai_kham: "Nhắc tái khám",
+    nhac_hen_kham: "Nhắc lịch hẹn",
   };
 
   // Mẫu mặc định (bác sĩ sửa được trong mục Cài đặt)
@@ -26,6 +27,9 @@ const Zalo = (function () {
     nhac_tai_kham:
       "Chào {ho_ten}, đã đến hẹn tái khám ngày {ngay_tai_kham}. " +
       "Vui lòng liên hệ bác sĩ để hẹn lịch.",
+    nhac_hen_kham:
+      "Chào {ho_ten}, xin nhắc anh/chị lịch hẹn khám vào {ngay_hen}{gio_hen}. " +
+      "Nếu cần đổi lịch, vui lòng liên hệ lại với bác sĩ.",
   };
 
   const PLACEHOLDERS = [
@@ -35,6 +39,8 @@ const Zalo = (function () {
     "{loi_ran}",
     "{ngay_kham}",
     "{ngay_tai_kham}",
+    "{ngay_hen}",
+    "{gio_hen}",
   ];
 
   // ---- Chuẩn hóa số điện thoại về dạng quốc tế: 0901234567 -> 84901234567 ----
@@ -76,13 +82,16 @@ const Zalo = (function () {
   function dienNoiDung(mau, data) {
     const p = (data && data.patient) || {};
     const v = (data && data.visit) || {};
+    const a = (data && data.appointment) || {};
     const map = {
-      ho_ten: p.name || "",
+      ho_ten: p.name || a.name || "",
       chan_doan: v.diagnosis || "",
       dieu_tri: v.treatment || "",
       loi_ran: v.advice || "", // "Lời dặn" đã có sẵn trong hồ sơ khám
       ngay_kham: v.date ? U.fmtDate(v.date) : "",
       ngay_tai_kham: v.followUpDate ? U.fmtDate(v.followUpDate) : "",
+      ngay_hen: a.date ? U.fmtDate(a.date) : "",
+      gio_hen: a.time ? " lúc " + a.time : "",
     };
     return String(mau || "")
       .replace(/\{(\w+)\}/g, (m, k) => (k in map ? map[k] : m))
@@ -346,11 +355,12 @@ const Zalo = (function () {
     opts = opts || {};
     const patient = opts.patient;
     const visit = opts.visit || null;
+    const appointment = opts.appointment || null;
     const loai = opts.loai || LOAI.SAU_KHAM;
     if (!patient) return U.toast("Thiếu thông tin bệnh nhân", "err");
 
     const mau = await layMau(loai);
-    const noiDung = dienNoiDung(mau, { patient, visit });
+    const noiDung = dienNoiDung(mau, { patient, visit, appointment });
     const so84 = chuanHoaSoDienThoai(patient.phone);
     const url = linkZalo(patient.phone);
 
