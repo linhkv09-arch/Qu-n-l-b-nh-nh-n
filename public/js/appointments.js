@@ -29,11 +29,13 @@ const Appointments = (function () {
 
   async function save(a) {
     a.updatedAt = Date.now();
+    delete a.days; // trường tính tạm (collectUpcoming/render) — không phải cột trong Supabase
     return DB.put("appointments", a);
   }
 
   async function setStatus(a, status) {
     const rec = Object.assign({}, a, { status, updatedAt: Date.now() });
+    delete rec.days; // trường tính tạm (collectUpcoming/render) — không phải cột trong Supabase
     await DB.put("appointments", rec);
     return rec;
   }
