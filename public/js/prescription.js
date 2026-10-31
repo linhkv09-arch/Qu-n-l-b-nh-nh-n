@@ -5,12 +5,24 @@
 
 const Rx = (function () {
   const UNITS = ["viên", "vỉ", "gói", "ống", "chai", "lọ", "tuýp", "hộp", "ml", "g"];
+  const CATALOG_KEY = "rx_drug_catalog";
+
+  // ---- Danh mục thuốc thường kê (lưu ở app_meta) ----
+  async function getCatalog() {
+    return (await DB.getMeta(CATALOG_KEY, [])) || [];
+  }
+  async function saveCatalog(list) {
+    return DB.setMeta(CATALOG_KEY, list);
+  }
 
   // ---- Bảng nhập thuốc có cấu trúc ----
   // meds: mảng {name, qty, unit, usage}. Chỉnh trực tiếp mảng này.
-  function medsEditor(meds) {
+  // catalog (tùy chọn): danh mục thuốc thường kê, dùng để gợi ý & tự điền SL/đơn vị/cách dùng.
+  function medsEditor(meds, catalog) {
+    catalog = catalog || [];
     const wrap = document.createElement("div");
     wrap.className = "meds-editor";
+    const listId = "medCatalog_" + Math.random().toString(36).slice(2, 8);
     const head = document.createElement("div");
     head.className = "meds-head";
     head.innerHTML = `<span>#</span><span>Tên thuốc &amp; hàm lượng</span><span>SL</span><span>Đơn vị</span><span>Cách dùng</span><span></span>`;
@@ -20,6 +32,12 @@ const Rx = (function () {
     addBtn.type = "button";
     addBtn.className = "btn btn-sm";
     addBtn.innerHTML = "➕ Thêm thuốc";
+
+    function findInCatalog(name) {
+      const n = (name || "").trim().toLowerCase();
+      if (!n) return null;
+      return catalog.find((c) => (c.name || "").trim().toLowerCase() === n) || null;
+    }
 
     function render() {
       list.innerHTML = "";
@@ -35,17 +53,33 @@ const Rx = (function () {
         row.className = "med-row";
         row.innerHTML = `
           <div class="med-idx">${idx + 1}</div>
-          <input class="med-name" placeholder="VD: Amoxicillin 500mg" value="${U.esc(m.name || "")}" />
+          <input class="med-name" list="${listId}" placeholder="VD: Amoxicillin 500mg" value="${U.esc(m.name || "")}" />
           <input class="med-qty" type="text" inputmode="numeric" placeholder="SL" value="${U.esc(m.qty || "")}" />
           <select class="med-unit">${UNITS.map(
             (u) => `<option ${(m.unit || "viên") === u ? "selected" : ""}>${u}</option>`
           ).join("")}</select>
           <input class="med-usage" placeholder="VD: Sáng 1 viên, tối 1 viên, sau ăn" value="${U.esc(m.usage || "")}" />
           <button type="button" class="med-del" title="Xóa thuốc">✕</button>`;
-        row.querySelector(".med-name").addEventListener("input", (e) => (m.name = e.target.value));
-        row.querySelector(".med-qty").addEventListener("input", (e) => (m.qty = e.target.value));
-        row.querySelector(".med-unit").addEventListener("change", (e) => (m.unit = e.target.value));
-        row.querySelector(".med-usage").addEventListener("input", (e) => (m.usage = e.target.value));
+        const nameInput = row.querySelector(".med-name");
+        const qtyInput = row.querySelector(".med-qty");
+        const unitSelect = row.querySelector(".med-unit");
+        const usageInput = row.querySelector(".med-usage");
+        nameInput.addEventListener("input", (e) => {
+          m.name = e.target.value;
+          // Chọn đúng tên có trong danh mục & các ô còn trống -> tự điền SL/đơn vị/cách dùng
+          const hit = findInCatalog(m.name);
+          if (hit && !m.qty && !m.usage) {
+            m.qty = hit.qty || "";
+            m.unit = hit.unit || m.unit;
+            m.usage = hit.usage || "";
+            qtyInput.value = m.qty;
+            if (m.unit) unitSelect.value = m.unit;
+            usageInput.value = m.usage;
+          }
+        });
+        qtyInput.addEventListener("input", (e) => (m.qty = e.target.value));
+        unitSelect.addEventListener("change", (e) => (m.unit = e.target.value));
+        usageInput.addEventListener("input", (e) => (m.usage = e.target.value));
         row.querySelector(".med-del").addEventListener("click", () => {
           meds.splice(idx, 1);
           render();
@@ -65,6 +99,12 @@ const Rx = (function () {
     wrap.appendChild(head);
     wrap.appendChild(list);
     wrap.appendChild(addBtn);
+    if (catalog.length) {
+      const dl = document.createElement("datalist");
+      dl.id = listId;
+      dl.innerHTML = catalog.map((c) => `<option value="${U.esc(c.name || "")}"></option>`).join("");
+      wrap.appendChild(dl);
+    }
     return { el: wrap };
   }
 
@@ -225,5 +265,16 @@ const Rx = (function () {
     return preview(p, visit);
   }
 
-  return { medsEditor, buildSheet, printSheet, preview, previewFromVisit, coDon, sheetImage, UNITS };
+  return {
+    medsEditor,
+    buildSheet,
+    printSheet,
+    preview,
+    previewFromVisit,
+    coDon,
+    sheetImage,
+    UNITS,
+    getCatalog,
+    saveCatalog,
+  };
 })();

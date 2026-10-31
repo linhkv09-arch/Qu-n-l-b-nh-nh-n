@@ -45,6 +45,7 @@ const Visits = (function () {
 
     const v = existing || {};
     const settings = await Settings.get();
+    const drugCatalog = await Rx.getCatalog();
     const meds = existing ? (existing.meds || []).map((x) => Object.assign({}, x)) : [];
     const initialAdvice = existing ? (v.advice || "") : (settings.adviceDefault || "");
     const form = document.createElement("form");
@@ -120,7 +121,7 @@ const Visits = (function () {
     `;
 
     // Bảng nhập thuốc có cấu trúc
-    const medsEd = Rx.medsEditor(meds);
+    const medsEd = Rx.medsEditor(meds, drugCatalog);
     form.querySelector(".meds-mount").appendChild(medsEd.el);
 
     const uploader = U.imageUploader(images, ["noisoi", "donthuoc", "khac"]);

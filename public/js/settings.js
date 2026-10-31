@@ -23,6 +23,8 @@ const Settings = (function () {
   async function render(root) {
     App.setTopbar(null);
     const s = await get();
+    const catalog = await Rx.getCatalog();
+    const catalogList = catalog.map((c) => Object.assign({}, c));
     root.innerHTML = `
       <div class="grid grid-2">
         <div class="card card-pad">
@@ -98,6 +100,36 @@ const Settings = (function () {
       };
       Rx.preview(samplePatient, sampleVisit);
     });
+
+    // ============================================================
+    //  DANH MỤC THUỐC THƯỜNG KÊ
+    // ============================================================
+    const rxCard = document.createElement("div");
+    rxCard.className = "card card-pad";
+    rxCard.style.marginTop = "16px";
+    rxCard.innerHTML = `
+      <h3 style="margin-top:0;color:var(--blue-deep);">💊 Danh mục thuốc thường kê</h3>
+      <p class="muted" style="font-size:14px;line-height:1.6;">
+        Thêm sẵn các thuốc bạn hay kê kèm SL/đơn vị/cách dùng mặc định. Khi kê đơn ở phần
+        Khám bệnh, gõ vài chữ vào ô tên thuốc sẽ hiện gợi ý từ danh mục — chọn 1 thuốc sẽ
+        tự điền luôn SL, đơn vị và cách dùng.
+      </p>
+      <div class="rx-catalog-mount"></div>
+    `;
+    root.appendChild(rxCard);
+    const catEd = Rx.medsEditor(catalogList);
+    rxCard.querySelector(".rx-catalog-mount").appendChild(catEd.el);
+    const saveCatBtn = document.createElement("button");
+    saveCatBtn.type = "button";
+    saveCatBtn.className = "btn btn-primary";
+    saveCatBtn.style.marginTop = "10px";
+    saveCatBtn.innerHTML = "💾 Lưu danh mục thuốc";
+    saveCatBtn.addEventListener("click", async () => {
+      const cleaned = catalogList.filter((m) => (m.name || "").trim());
+      await Rx.saveCatalog(cleaned);
+      U.toast("Đã lưu danh mục thuốc", "ok");
+    });
+    rxCard.appendChild(saveCatBtn);
 
     // ============================================================
     //  MẪU TIN NHẮN ZALO
