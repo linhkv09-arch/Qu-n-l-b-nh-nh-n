@@ -12,6 +12,7 @@ create table if not exists public.patients (
   id          text primary key,                -- id do app tạo (chuỗi ngắn)
   code        text unique default ('BN' || lpad(nextval('patient_code_seq')::text, 4, '0')),
   name        text not null,
+  relation_note text,                           -- ghi chú nhận diện (vd: trùng tên với ai)
   gender      text,
   birth_year  int,
   phone       text,
@@ -21,6 +22,8 @@ create table if not exists public.patients (
   created_at  bigint,                           -- epoch ms (do app cấp)
   updated_at  bigint
 );
+
+alter table public.patients add column if not exists relation_note text;
 
 -- ---------- 3) Bảng KHÁM BỆNH ----------
 create table if not exists public.visits (

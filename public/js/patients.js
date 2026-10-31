@@ -24,6 +24,10 @@ const Patients = (function () {
           <label>Họ và tên <span class="req">*</span></label>
           <input name="name" required value="${U.esc(p.name || "")}" placeholder="Nguyễn Văn A" />
         </div>
+        <div class="field full">
+          <label>Ghi chú nhận diện (hiện cùng tên trong danh sách)</label>
+          <input name="relationNote" value="${U.esc(p.relationNote || "")}" placeholder="VD: con chị Hoa, hàng xóm bác Tâm, bệnh nhân cũ..." />
+        </div>
         <div class="field">
           <label>Giới tính</label>
           <select name="gender">
@@ -91,6 +95,7 @@ const Patients = (function () {
         ? Object.assign({}, existing)
         : { id: U.uid(), createdAt: Date.now() }; // mã BN do Postgres tự sinh
       rec.name = name;
+      rec.relationNote = (fd.get("relationNote") || "").trim();
       rec.gender = fd.get("gender") || "";
       rec.birthYear = fd.get("birthYear") ? parseInt(fd.get("birthYear"), 10) : null;
       rec.phone = (fd.get("phone") || "").trim();
@@ -205,7 +210,7 @@ const Patients = (function () {
                 const age = U.ageFromYear(p.birthYear);
                 return `<tr class="clickable" data-id="${p.id}">
                   <td><span class="badge badge-muted">${U.esc(p.code || "—")}</span></td>
-                  <td><strong>${U.esc(p.name)}</strong></td>
+                  <td><strong>${U.esc(p.name)}</strong>${p.relationNote ? `<div class="muted" style="font-size:12px;">${U.esc(p.relationNote)}</div>` : ""}</td>
                   <td>${U.esc(p.gender || "—")}</td>
                   <td>${age != null ? age : "—"}</td>
                   <td class="nowrap">${U.esc(p.phone || "—")}</td>
@@ -240,6 +245,7 @@ const Patients = (function () {
           return (
             U.noAccent(p.name).includes(q) ||
             U.noAccent(p.code || "").includes(q) ||
+            U.noAccent(p.relationNote || "").includes(q) ||
             (p.phone || "").includes(q)
           );
         });
@@ -280,6 +286,7 @@ const Patients = (function () {
         <div class="avatar">${U.esc(U.initials(p.name))}</div>
         <div>
           <h2>${U.esc(p.name)}</h2>
+          ${p.relationNote ? `<div class="muted" style="font-size:13px;margin-top:-4px;">${U.esc(p.relationNote)}</div>` : ""}
           <div class="patient-meta">
             <span><span class="badge badge-muted">${U.esc(p.code || "—")}</span></span>
             <span>${U.esc(p.gender || "—")}</span>
