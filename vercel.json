@@ -5,8 +5,6 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "crons": [
-    { "path": "/api/telegram-notify", "schedule": "0 1 * * *" },
-    { "path": "/api/telegram-notify", "schedule": "0 5 * * *" },
-    { "path": "/api/telegram-notify", "schedule": "0 10 * * *" }
+    { "path": "/api/telegram-notify", "schedule": "0 0 * * *" }
   ]
 }

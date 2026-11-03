@@ -33,7 +33,7 @@ function escHtml(s) {
   return String(s == null ? "" : s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 }
 
-// Khóa app_meta lưu ngày đã gửi báo cáo gần nhất (để chống gửi trùng khi có nhiều lượt cron/ngày)
+// Khóa app_meta lưu ngày đã gửi báo cáo gần nhất (chống gửi trùng nếu Vercel gọi cron lặp lại trong ngày)
 const META_KEY_BAO_CAO = "telegram_bao_cao_cuoi";
 
 // ---- Xác thực: gọi từ Vercel Cron (CRON_SECRET) hoặc từ app (token đăng nhập Supabase) ----
