@@ -149,17 +149,26 @@ const U = (function () {
     overlay.appendChild(modal);
     root.appendChild(overlay);
 
+    // Đánh dấu "đã nhập dở" khi người dùng gõ/chọn bất cứ ô nào trong cửa sổ.
+    let dirty = false;
+    modal.addEventListener("input", () => (dirty = true));
+    modal.addEventListener("change", () => (dirty = true));
+
     function close() {
       overlay.remove();
       document.removeEventListener("keydown", onKey);
     }
-    function onKey(e) {
-      if (e.key === "Escape") close();
+    // Đóng bằng nút × hoặc phím Esc: nếu đang nhập dở thì hỏi lại trước khi bỏ.
+    function requestClose() {
+      if (dirty && !window.confirm("Thông tin đang nhập sẽ bị mất. Bạn có chắc muốn đóng?")) return;
+      close();
     }
-    closeBtn.addEventListener("click", close);
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) close();
-    });
+    function onKey(e) {
+      // Chỉ cửa sổ trên cùng mới phản ứng với Esc.
+      if (e.key === "Escape" && overlay === root.lastElementChild) requestClose();
+    }
+    closeBtn.addEventListener("click", requestClose);
+    // Bấm ra vùng tối bên ngoài: KHÔNG đóng cửa sổ (tránh mất dữ liệu đang nhập).
     document.addEventListener("keydown", onKey);
 
     return { close, overlay, modal, body };
